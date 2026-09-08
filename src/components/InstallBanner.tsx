@@ -76,34 +76,36 @@ export function InstallBanner() {
   return (
     <>
       {visible && (
-        <div className="install-banner" role="region" aria-label="Get Quittance">
-          <button
-            type="button"
-            className="install-banner-close"
-            aria-label="Dismiss"
-            onClick={dismiss}
-          >
-            <X size={14} />
-          </button>
-          <Image
-            src="/apple-touch-icon.png"
-            alt=""
-            width={48}
-            height={48}
-            className="install-banner-icon"
-            priority
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-bold leading-tight">
-              Quittance
-            </p>
-            <p className="truncate text-[11px] text-[var(--ink-muted)]">
-              Private IOU tracker · Free
-            </p>
+        <div className="install-banner-wrap" role="region" aria-label="Get Quittance">
+          <div className="install-banner">
+            <button
+              type="button"
+              className="install-banner-close"
+              aria-label="Dismiss"
+              onClick={dismiss}
+            >
+              <X size={14} strokeWidth={2.5} />
+            </button>
+            <Image
+              src="/apple-touch-icon.png"
+              alt=""
+              width={44}
+              height={44}
+              className="install-banner-icon"
+              priority
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-semibold leading-tight tracking-[-0.01em] text-[#1d1d1f]">
+                Quittance
+              </p>
+              <p className="truncate text-[11px] leading-tight text-[#6e6e73]">
+                Private IOU tracker · Free
+              </p>
+            </div>
+            <button type="button" className="install-get" onClick={onGet}>
+              GET
+            </button>
           </div>
-          <button type="button" className="install-get" onClick={onGet}>
-            GET
-          </button>
         </div>
       )}
 

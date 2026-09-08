@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     "A private way to track who owes what — money or things, across your devices.",
   applicationName: "Quittance",
   manifest: "/manifest.webmanifest",
+  themeColor: "#1f6b57",
   appleWebApp: {
     capable: true,
     title: "Quittance",
