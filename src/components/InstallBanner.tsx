@@ -54,17 +54,24 @@ export function InstallBanner() {
   if (!visible && !iosGuide) return null;
 
   async function onGet() {
-    if (deferred) {
+    // Always show the Add to Home Screen guide so the flow is visible.
+    // If the browser exposes a native install prompt, offer it from the sheet.
+    setIosGuide(true);
+  }
+
+  async function onInstallNative() {
+    if (!deferred) return;
+    try {
       await deferred.prompt();
       const choice = await deferred.userChoice;
       setDeferred(null);
       if (choice.outcome === "accepted") {
+        setIosGuide(false);
         setVisible(false);
-        return;
       }
+    } catch {
+      setDeferred(null);
     }
-    // iOS / browsers without native install prompt
-    setIosGuide(true);
   }
 
   function dismiss() {
@@ -141,53 +148,67 @@ export function InstallBanner() {
               </div>
             </div>
 
-            {isIos() ? (
-              <ol className="space-y-3 text-[14px] text-[var(--ink)]">
-                <li className="flex gap-3">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
-                    1
+            {/* Always show Home Screen steps — this is the product install path */}
+            <ol className="space-y-3 text-[14px] text-[var(--ink)]">
+              <li className="flex gap-3">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
+                  1
+                </span>
+                <span className="pt-0.5">
+                  {isIos() ? (
+                    <>
+                      Tap <Share size={14} className="mx-0.5 inline" /> Share in
+                      Safari
+                    </>
+                  ) : (
+                    <>Open the browser menu or install icon</>
+                  )}
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
+                  2
+                </span>
+                <span className="pt-0.5">
+                  Choose{" "}
+                  <span className="inline-flex items-center gap-1 font-semibold">
+                    <SquarePlus size={14} /> Add to Home Screen
                   </span>
-                  <span className="pt-0.5">
-                    Tap <Share size={14} className="mx-0.5 inline" /> Share in
-                    Safari
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
-                    2
-                  </span>
-                  <span className="pt-0.5">
-                    Choose{" "}
-                    <span className="inline-flex items-center gap-1 font-semibold">
-                      <SquarePlus size={14} /> Add to Home Screen
-                    </span>
-                  </span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
-                    3
-                  </span>
-                  <span className="pt-0.5">Tap Add — Quittance appears on your Home Screen</span>
-                </li>
-              </ol>
-            ) : (
-              <p className="text-[14px] leading-relaxed text-[var(--ink-muted)]">
-                Use your browser’s install option, or open this site in Safari on
-                iPhone and tap Share → Add to Home Screen.
-              </p>
-            )}
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-[12px] font-bold text-[var(--accent-ink)]">
+                  3
+                </span>
+                <span className="pt-0.5">
+                  Tap Add — Quittance appears on your Home Screen with its glass
+                  icon
+                </span>
+              </li>
+            </ol>
 
-            <button
-              type="button"
-              className="btn-primary mt-5 w-full"
-              onClick={() => {
-                setIosGuide(false);
-                sessionStorage.setItem("quittance-install-dismissed", "1");
-                setVisible(false);
-              }}
-            >
-              Got it
-            </button>
+            <div className="mt-5 flex flex-col gap-2">
+              {deferred && (
+                <button
+                  type="button"
+                  className="btn-primary w-full"
+                  onClick={onInstallNative}
+                >
+                  Install Quittance
+                </button>
+              )}
+              <button
+                type="button"
+                className={deferred ? "btn-ghost w-full" : "btn-primary w-full"}
+                onClick={() => {
+                  setIosGuide(false);
+                  sessionStorage.setItem("quittance-install-dismissed", "1");
+                  setVisible(false);
+                }}
+              >
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
