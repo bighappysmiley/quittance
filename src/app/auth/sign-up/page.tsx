@@ -8,11 +8,15 @@ export default function SignUpPage() {
   const [state, formAction, pending] = useActionState(signUpWithEmail, null);
 
   return (
-    <div className="app-shell page-pad flex min-h-dvh flex-col justify-center">
-      <p className="section-label">Account</p>
-      <h1 className="mt-2 text-[34px] font-bold tracking-tight">Create account</h1>
-      <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-[var(--ink-muted)]">
-        Track money and items privately. Data saves to your Neon database.
+    <div className="welcome-shell page-pad flex min-h-dvh flex-col justify-center">
+      <Link href="/" className="brand-mark text-[22px] text-[var(--ink)]">
+        Quittance
+      </Link>
+      <h1 className="mt-8 text-[32px] font-bold tracking-tight">
+        Create your space
+      </h1>
+      <p className="mt-2 max-w-sm text-[15px] leading-relaxed text-[var(--ink-muted)]">
+        Start a private ledger for money and things — yours alone.
       </p>
 
       <form action={formAction} className="panel mt-8 space-y-3 p-4">
@@ -23,7 +27,7 @@ export default function SignUpPage() {
             name="name"
             required
             autoComplete="name"
-            placeholder="Your name"
+            placeholder="What should we call you?"
           />
         </label>
         <label className="block text-[12px] font-bold text-[var(--ink-muted)]">
@@ -53,7 +57,7 @@ export default function SignUpPage() {
           <p className="text-sm text-[var(--danger)]">{state.error}</p>
         )}
         <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Creating…" : "Create account"}
+          {pending ? "Creating…" : "Get started"}
         </button>
       </form>
 

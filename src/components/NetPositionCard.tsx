@@ -103,9 +103,9 @@ export function DirectionToggle({
 export function EmptyLedger() {
   return (
     <div className="panel px-4 py-8 text-center">
-      <p className="text-[15px] font-bold">No open balances</p>
+      <p className="text-[15px] font-bold">Nothing outstanding</p>
       <p className="mt-1 text-sm text-[var(--ink-muted)]">
-        Add a lend or borrow, or load the fictional sample set.
+        Add your first lend or borrow to get started.
       </p>
       <Link href="/new" className="btn-primary mt-4 inline-flex">
         New record

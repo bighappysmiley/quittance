@@ -62,7 +62,7 @@ export default function LedgerPage() {
       <header className="mb-4 flex items-start justify-between">
         <div>
           <p className="section-label">{todayHeader()}</p>
-          <h1 className="mt-1 text-[30px] font-bold tracking-tight">Quittance</h1>
+          <h1 className="brand-mark mt-1 text-[34px] tracking-tight">Quittance</h1>
         </div>
         <button
           type="button"
@@ -130,11 +130,10 @@ export default function LedgerPage() {
               }
             }}
           >
-            {demoBusy ? "Loading sample…" : "Load fictional sample ledger"}
+            {demoBusy ? "Loading sample…" : "Try a sample ledger"}
           </button>
           <p className="px-1 text-[12px] text-[var(--ink-faint)]">
-            Sample uses made-up names (Alex, Jordan, Riley, Morgan) — not anyone
-            real.
+            A quick look with made-up people — swap it for your own anytime.
           </p>
         </div>
       ) : (

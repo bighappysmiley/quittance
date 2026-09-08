@@ -95,7 +95,7 @@ export default function SettingsPage() {
       const data = JSON.parse(await file.text());
       await importLedger(data);
     } catch {
-      alert("Could not read that JSON file.");
+      alert("That backup file couldn’t be read.");
     }
   }
 
@@ -107,7 +107,7 @@ export default function SettingsPage() {
 
   return (
     <div className="app-shell page-pad">
-      <h1 className="mb-4 text-[30px] font-bold tracking-tight">Settings</h1>
+      <h1 className="brand-mark mb-4 text-[34px] tracking-tight">Settings</h1>
 
       <p className="section-label mb-2">Account</p>
       <div className="panel mb-2 overflow-hidden">
@@ -119,7 +119,7 @@ export default function SettingsPage() {
             <p className="text-[15px] font-bold">{user.name || user.email}</p>
             <p className="text-[12px] text-[var(--ink-muted)]">{user.email}</p>
             <p className="mt-0.5 text-[11px] text-[var(--ink-faint)]">
-              Synced to Neon Postgres
+              All changes saved
             </p>
           </div>
         </div>
@@ -257,9 +257,9 @@ export default function SettingsPage() {
             <Beaker size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-bold">Load fictional sample</p>
+            <p className="text-[14px] font-bold">Try a sample ledger</p>
             <p className="text-[12px] text-[var(--ink-muted)]">
-              Alex, Jordan, Riley, Morgan — not real people
+              Preview with made-up people — replace anytime
             </p>
           </div>
         </button>
@@ -268,7 +268,7 @@ export default function SettingsPage() {
             <Download size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-bold">Export JSON</p>
+            <p className="text-[14px] font-bold">Download a backup</p>
             <p className="text-[12px] text-[var(--ink-muted)]">
               {counts.people} people · {counts.entries} entries
             </p>
@@ -279,7 +279,10 @@ export default function SettingsPage() {
             <FileSpreadsheet size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-bold">Export CSV</p>
+            <p className="text-[14px] font-bold">Export spreadsheet</p>
+            <p className="text-[12px] text-[var(--ink-muted)]">
+              Opens in Numbers, Excel, or Sheets
+            </p>
           </div>
         </button>
         <button
@@ -291,7 +294,10 @@ export default function SettingsPage() {
             <Upload size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-bold">Import JSON</p>
+            <p className="text-[14px] font-bold">Restore from backup</p>
+            <p className="text-[12px] text-[var(--ink-muted)]">
+              Replace this ledger with a saved copy
+            </p>
           </div>
         </button>
         <input
@@ -307,7 +313,8 @@ export default function SettingsPage() {
         />
       </div>
       <p className="mb-5 px-1 text-[12px] text-[var(--ink-faint)]">
-        Ledger syncs to your Neon database. Exports are copies you control.
+        Your ledger syncs automatically to your account. Backups give you a copy
+        you control.
       </p>
 
       <p className="section-label mb-2">About</p>
@@ -317,7 +324,8 @@ export default function SettingsPage() {
         </div>
         <p className="text-[13px] leading-relaxed text-[var(--ink-muted)]">
           <span className="font-bold text-[var(--ink)]">Quittance</span> —
-          private IOUs for money and items, backed by Neon Auth + Postgres.
+          private way to track who owes what — synced across your devices, seen
+          only by you.
         </p>
       </div>
 

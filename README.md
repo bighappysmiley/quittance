@@ -1,25 +1,17 @@
 # Quittance
 
-Private IOU tracker for money and items. Accounts auth via **Neon Auth**; ledger data lives in **Neon Postgres**.
+A private way to track who owes what — money or things.
 
 ## Live
 
 https://quittanceledger.netlify.app
 
-## Stack
-
-- Next.js App Router
-- Neon Auth (email/password)
-- Neon Postgres (`people`, `entries`, `preferences`)
-- Netlify deploy from `main`
-
 ## Develop
 
 ```bash
 cp .env.example .env.local
-# fill DATABASE_URL, NEON_AUTH_BASE_URL, NEON_AUTH_COOKIE_SECRET
 npm install
 npm run dev
 ```
 
-Create an account, then optionally **Load fictional sample** in Settings (Alex / Jordan / Riley / Morgan — not real people).
+Open the welcome flow, create an account, and optionally try the sample ledger.

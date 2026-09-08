@@ -18,19 +18,20 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    const isAuthRoute = pathname.startsWith("/auth");
-    if (!user && !isAuthRoute && pathname !== "/") {
-      router.replace("/auth/sign-in");
+    const publicRoute =
+      pathname === "/" || pathname.startsWith("/auth");
+    if (!user && !publicRoute) {
+      router.replace("/");
     }
-    if (user && (isAuthRoute || pathname === "/")) {
+    if (user && (pathname === "/" || pathname.startsWith("/auth"))) {
       router.replace("/ledger");
     }
   }, [hydrated, user, pathname, router]);
 
   if (!hydrated) {
     return (
-      <div className="app-shell grid min-h-dvh place-items-center">
-        <p className="text-sm text-[var(--ink-muted)]">Loading Quittance…</p>
+      <div className="welcome-shell grid min-h-dvh place-items-center">
+        <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
       </div>
     );
   }

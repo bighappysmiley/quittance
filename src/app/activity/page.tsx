@@ -36,7 +36,7 @@ export default function ActivityPage() {
 
   return (
     <div className="app-shell page-pad">
-      <h1 className="mb-4 text-[30px] font-bold tracking-tight">Activity</h1>
+      <h1 className="brand-mark mb-4 text-[34px] tracking-tight">Activity</h1>
 
       <p className="section-label mb-2">Insights</p>
       <div className="mb-5 grid grid-cols-2 gap-2">
