@@ -100,7 +100,15 @@ export default function SettingsPage() {
   }
 
   async function onSignOut() {
-    await authClient.signOut();
+    try {
+      await fetch("/api/auth/sign-out", {
+        method: "POST",
+        credentials: "include",
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch {
+      // still clear local state
+    }
     signOutLocal();
     window.location.href = "/auth/sign-in";
   }
