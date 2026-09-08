@@ -65,14 +65,44 @@ export interface LedgerState {
 
 export const ACCENTS: Record<
   AccentId,
-  { label: string; value: string; soft: string }
+  { label: string; value: string; soft: string; softDark: string }
 > = {
-  gold: { label: "Gold", value: "#A67C2D", soft: "#F3E7C7" },
-  blue: { label: "Blue", value: "#2F6FED", soft: "#D9E6FF" },
-  green: { label: "Teal", value: "#156B5C", soft: "#D3EDE7" },
-  purple: { label: "Plum", value: "#6B4F8A", soft: "#E8DFF0" },
-  pink: { label: "Rose", value: "#B04A6A", soft: "#F4D9E3" },
-  gray: { label: "Slate", value: "#4B5563", soft: "#E5E7EB" },
+  gold: {
+    label: "Gold",
+    value: "#C9A227",
+    soft: "#F3E7C7",
+    softDark: "#2a2414",
+  },
+  blue: {
+    label: "Blue",
+    value: "#5B8DEF",
+    soft: "#D9E6FF",
+    softDark: "#152033",
+  },
+  green: {
+    label: "Mint",
+    value: "#8fd6b0",
+    soft: "#D3EDE7",
+    softDark: "#1a2e26",
+  },
+  purple: {
+    label: "Plum",
+    value: "#A78BBE",
+    soft: "#E8DFF0",
+    softDark: "#241a2c",
+  },
+  pink: {
+    label: "Rose",
+    value: "#e8c4b4",
+    soft: "#F4D9E3",
+    softDark: "#2c1f1c",
+  },
+  gray: {
+    label: "Slate",
+    value: "#9AA3AE",
+    soft: "#E5E7EB",
+    softDark: "#22262a",
+  },
 };
 
 export const CURRENCIES: {
@@ -100,7 +130,7 @@ export const ITEM_CATEGORIES = [
 ] as const;
 
 export const DEFAULT_PREFERENCES: Preferences = {
-  theme: "light",
+  theme: "dark",
   accent: "green",
   currency: "USD",
   density: "comfortable",

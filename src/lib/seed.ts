@@ -126,8 +126,8 @@ export function mapEntry(row: Record<string, unknown>): Entry {
 export function mapPreferences(row: Record<string, unknown> | undefined): Preferences {
   if (!row) return { ...DEFAULT_PREFERENCES };
   return {
-    theme: (row.theme as Preferences["theme"]) || "light",
-    accent: (row.accent as Preferences["accent"]) || "teal",
+    theme: (row.theme as Preferences["theme"]) || "dark",
+    accent: (row.accent as Preferences["accent"]) || "green",
     currency: (row.currency as Preferences["currency"]) || "USD",
     density: (row.density as Preferences["density"]) || "comfortable",
     confirmActions:

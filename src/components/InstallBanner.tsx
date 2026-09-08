@@ -102,10 +102,10 @@ export function InstallBanner() {
               priority
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold leading-tight tracking-[-0.01em] text-[#1d1d1f]">
+              <p className="install-banner-title truncate text-[13px] font-semibold leading-tight tracking-[-0.01em]">
                 Quittance
               </p>
-              <p className="truncate text-[11px] leading-tight text-[#6e6e73]">
+              <p className="install-banner-sub truncate text-[11px] leading-tight">
                 Private IOU tracker · Free
               </p>
             </div>

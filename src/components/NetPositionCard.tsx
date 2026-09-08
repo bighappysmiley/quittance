@@ -23,39 +23,50 @@ export function NetPositionCard({
   const netTone = net > 0 ? "lend" : net < 0 ? "borrow" : "neutral";
 
   return (
-    <section className="panel overflow-hidden">
-      <div className="px-4 pb-3 pt-4">
-        <p className="section-label">Net position</p>
+    <section className="panel overflow-hidden border-0 shadow-[var(--shadow-soft)]">
+      <div
+        className="relative px-5 pb-4 pt-5 text-white"
+        style={{
+          background:
+            "linear-gradient(165deg, #1f3d32 0%, #182029 48%, #2c211c 100%)",
+        }}
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+          Net position
+        </p>
         <p
-          className={`amount mt-1 text-[40px] font-semibold leading-none ${
-            netTone === "lend"
-              ? "tone-lend"
-              : netTone === "borrow"
-                ? "tone-borrow"
-                : ""
-          }`}
+          className="amount mt-2 text-[40px] font-semibold leading-none tracking-tight"
+          style={{
+            color:
+              netTone === "lend"
+                ? "#8fd6b0"
+                : netTone === "borrow"
+                  ? "#e8c4b4"
+                  : "rgba(255,255,255,0.88)",
+            fontFamily: "var(--font-display)",
+          }}
         >
           {formatMoney(net, currency, { signed: true })}
         </p>
-      </div>
-      <div className="grid grid-cols-2 border-t border-[var(--line)]">
-        <div className="border-r border-[var(--line)] px-4 py-3">
-          <p className="text-[12px] text-[var(--ink-muted)]">Owed to you</p>
-          <p className="amount mt-1 text-lg font-semibold tone-lend">
-            {formatMoney(owedToYou, currency)}
-          </p>
-          <p className="text-[11px] text-[var(--ink-faint)]">
-            {owedPeople} {owedPeople === 1 ? "person" : "people"}
-          </p>
-        </div>
-        <div className="px-4 py-3">
-          <p className="text-[12px] text-[var(--ink-muted)]">You owe</p>
-          <p className="amount mt-1 text-lg font-semibold tone-borrow">
-            {formatMoney(youOwe, currency)}
-          </p>
-          <p className="text-[11px] text-[var(--ink-faint)]">
-            {owePeople} {owePeople === 1 ? "person" : "people"}
-          </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/10 pt-3">
+          <div>
+            <p className="text-[12px] text-white/45">Owed to you</p>
+            <p className="amount mt-0.5 text-lg font-semibold text-[#8fd6b0]">
+              {formatMoney(owedToYou, currency)}
+            </p>
+            <p className="text-[11px] text-white/35">
+              {owedPeople} {owedPeople === 1 ? "person" : "people"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[12px] text-white/45">You owe</p>
+            <p className="amount mt-0.5 text-lg font-semibold text-[#e8c4b4]">
+              {formatMoney(youOwe, currency)}
+            </p>
+            <p className="text-[11px] text-white/35">
+              {owePeople} {owePeople === 1 ? "person" : "people"}
+            </p>
+          </div>
         </div>
       </div>
     </section>

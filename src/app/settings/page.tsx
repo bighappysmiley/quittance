@@ -162,7 +162,7 @@ export default function SettingsPage() {
                 }}
               >
                 {prefs.accent === id && (
-                  <Check size={14} color="white" strokeWidth={3} />
+                  <Check size={14} color="#0e1110" strokeWidth={3} />
                 )}
               </button>
             ))}

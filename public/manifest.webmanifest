@@ -4,8 +4,8 @@
   "description": "A private way to track who owes what.",
   "start_url": "/ledger",
   "display": "standalone",
-  "background_color": "#eef2f0",
-  "theme_color": "#1f6b57",
+  "background_color": "#0e1110",
+  "theme_color": "#0e1110",
   "orientation": "portrait",
   "icons": [
     {

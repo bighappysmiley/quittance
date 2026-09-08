@@ -26,11 +26,15 @@ export const metadata: Metadata = {
     "A private way to track who owes what — money or things, across your devices.",
   applicationName: "Quittance",
   manifest: "/manifest.webmanifest",
-  themeColor: "#1f6b57",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0e1110" },
+    { media: "(prefers-color-scheme: light)", color: "#eef2f0" },
+    { color: "#0e1110" },
+  ],
   appleWebApp: {
     capable: true,
     title: "Quittance",
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
   },
   icons: {
     icon: [
@@ -57,7 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      data-theme="light"
+      data-theme="dark"
       data-density="comfortable"
       className={`${brand.variable} ${ui.variable} ${num.variable} h-full antialiased`}
     >
