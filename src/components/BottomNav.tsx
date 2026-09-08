@@ -12,7 +12,6 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname();
-
   return (
     <nav className="bottom-nav" aria-label="Main">
       {tabs.map(({ href, label, icon: Icon }) => {
@@ -25,7 +24,7 @@ export function BottomNav() {
             data-active={active}
             aria-current={active ? "page" : undefined}
           >
-            <Icon size={20} strokeWidth={active ? 2.25 : 1.85} />
+            <Icon size={18} strokeWidth={active ? 2.4 : 1.9} />
             <span>{label}</span>
           </Link>
         );

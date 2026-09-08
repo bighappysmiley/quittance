@@ -57,7 +57,6 @@ export default function NewRecordPage() {
       amount: assetType === "money" ? Number(amount) : 0,
       itemName: assetType === "item" ? what.trim() : undefined,
       category: assetType === "item" ? category : undefined,
-      photoDataUrl,
       date,
       expectedBack: expectedBack || undefined,
       reminder,
@@ -67,8 +66,8 @@ export default function NewRecordPage() {
   }
 
   return (
-    <div className="phone-shell min-h-dvh bg-[var(--bg)]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)]/90 px-4 py-3 backdrop-blur-md">
+    <div className="app-shell min-h-dvh bg-[var(--bg)]">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--line)] bg-[var(--bg)] px-4 py-3">
         <button
           type="button"
           onClick={() => router.back()}

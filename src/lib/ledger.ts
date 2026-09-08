@@ -191,7 +191,7 @@ export function ensurePerson(
     "#CD853F",
   ];
   const person: Person = {
-    id: `p-${crypto.randomUUID().slice(0, 8)}`,
+    id: `p-${crypto.randomUUID()}`,
     name: trimmed,
     color: palette[people.length % palette.length],
   };

@@ -3,7 +3,6 @@ export type AssetType = "money" | "item";
 export type ThemeMode = "auto" | "light" | "dark";
 export type ListDensity = "compact" | "comfortable" | "spacious";
 export type LedgerFilter = "all" | "lent" | "borrowed";
-export type SortMode = "recent" | "amount" | "name";
 export type ReminderOption = "none" | "tomorrow" | "week" | "custom";
 
 export type AccentId =
@@ -35,16 +34,14 @@ export interface Entry {
   personId: string;
   direction: Direction;
   assetType: AssetType;
-  /** Amount in major currency units; ignored for items */
   amount: number;
-  /** Optional partial payments already made */
   paid: number;
   itemName?: string;
   category?: string;
   photoDataUrl?: string;
   note?: string;
-  date: string; // ISO date
-  expectedBack?: string; // ISO date
+  date: string;
+  expectedBack?: string;
   reminder?: ReminderOption;
   reminderDate?: string;
   settled: boolean;
@@ -60,13 +57,6 @@ export interface Preferences {
   confirmActions: boolean;
 }
 
-export interface Account {
-  id: string;
-  username: string;
-  passwordHash: string;
-  createdAt: string;
-}
-
 export interface LedgerState {
   people: Person[];
   entries: Entry[];
@@ -77,12 +67,12 @@ export const ACCENTS: Record<
   AccentId,
   { label: string; value: string; soft: string }
 > = {
-  gold: { label: "Gold", value: "#C4A035", soft: "#F5E9C0" },
-  blue: { label: "Blue", value: "#3B7DD8", soft: "#D6E6F8" },
-  green: { label: "Green", value: "#2F9B6A", soft: "#D7F0E4" },
-  purple: { label: "Purple", value: "#8B6BC9", soft: "#E8DEF8" },
-  pink: { label: "Pink", value: "#D45B8C", soft: "#F8D9E6" },
-  gray: { label: "Gray", value: "#6B7280", soft: "#E5E7EB" },
+  gold: { label: "Gold", value: "#A67C2D", soft: "#F3E7C7" },
+  blue: { label: "Blue", value: "#2F6FED", soft: "#D9E6FF" },
+  green: { label: "Teal", value: "#156B5C", soft: "#D3EDE7" },
+  purple: { label: "Plum", value: "#6B4F8A", soft: "#E8DFF0" },
+  pink: { label: "Rose", value: "#B04A6A", soft: "#F4D9E3" },
+  gray: { label: "Slate", value: "#4B5563", soft: "#E5E7EB" },
 };
 
 export const CURRENCIES: {
@@ -113,6 +103,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   theme: "light",
   accent: "green",
   currency: "USD",
-  density: "compact",
+  density: "comfortable",
   confirmActions: true,
 };

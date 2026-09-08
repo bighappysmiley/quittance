@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
-  Cloud,
   LogOut,
   Download,
   FileSpreadsheet,
@@ -11,6 +10,7 @@ import {
   Info,
   User,
   Check,
+  Beaker,
 } from "lucide-react";
 import { BottomNav } from "@/components/BottomNav";
 import { SegmentedControl } from "@/components/SegmentedControl";
@@ -19,6 +19,7 @@ import {
   useAppStore,
   usePrefs,
 } from "@/store/useAppStore";
+import { authClient } from "@/lib/auth/client";
 import {
   ACCENTS,
   CURRENCIES,
@@ -31,35 +32,31 @@ import {
 export default function SettingsPage() {
   const ledger = useActiveLedger();
   const prefs = usePrefs();
-  const session = useAppStore((s) => s.session);
-  const savePulse = useAppStore((s) => s.savePulse);
+  const user = useAppStore((s) => s.user);
   const updatePreferences = useAppStore((s) => s.updatePreferences);
-  const signOut = useAppStore((s) => s.signOut);
+  const signOutLocal = useAppStore((s) => s.signOutLocal);
+  const loadDemo = useAppStore((s) => s.loadDemo);
   const importLedger = useAppStore((s) => s.importLedger);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
 
   const counts = useMemo(() => {
     if (!ledger) return { people: 0, entries: 0 };
-    return {
-      people: ledger.people.length,
-      entries: ledger.entries.length,
-    };
+    return { people: ledger.people.length, entries: ledger.entries.length };
   }, [ledger]);
 
-  if (!ledger || !session) return null;
+  if (!ledger || !user) return null;
 
   function exportJson() {
-    if (!ledger) return;
     const blob = new Blob([JSON.stringify(ledger, null, 2)], {
       type: "application/json",
     });
-    downloadBlob(blob, `quittance-${session!.username}.json`);
+    downloadBlob(blob, `quittance-${user!.email}.json`);
   }
 
   function exportCsv() {
-    if (!ledger) return;
     const peopleMap = Object.fromEntries(
-      ledger.people.map((p) => [p.id, p.name]),
+      ledger!.people.map((p) => [p.id, p.name]),
     );
     const header = [
       "id",
@@ -72,7 +69,7 @@ export default function SettingsPage() {
       "date",
       "settled",
     ];
-    const rows = ledger.entries.map((e) =>
+    const rows = ledger!.entries.map((e) =>
       [
         e.id,
         peopleMap[e.personId] ?? "",
@@ -87,68 +84,61 @@ export default function SettingsPage() {
         .map((v) => `"${String(v).replaceAll('"', '""')}"`)
         .join(","),
     );
-    const blob = new Blob([[header.join(","), ...rows].join("\n")], {
-      type: "text/csv",
-    });
-    downloadBlob(blob, `quittance-${session!.username}.csv`);
+    downloadBlob(
+      new Blob([[header.join(","), ...rows].join("\n")], { type: "text/csv" }),
+      `quittance-${user!.email}.csv`,
+    );
   }
 
   async function onImportFile(file: File) {
-    const text = await file.text();
     try {
-      const data = JSON.parse(text);
-      importLedger(data);
+      const data = JSON.parse(await file.text());
+      await importLedger(data);
     } catch {
       alert("Could not read that JSON file.");
     }
   }
 
-  return (
-    <div className="phone-shell page-pad">
-      <h1
-        className="mb-5 text-[34px] font-semibold tracking-tight fade-up"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        Settings
-      </h1>
+  async function onSignOut() {
+    await authClient.signOut();
+    signOutLocal();
+    window.location.href = "/auth/sign-in";
+  }
 
-      <p className="section-label mb-2 fade-up">Account</p>
-      <div className="card mb-2 overflow-hidden fade-up fade-up-delay-1">
-        <div className="card-row">
-          <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-            <User size={18} />
+  return (
+    <div className="app-shell page-pad">
+      <h1 className="mb-4 text-[30px] font-bold tracking-tight">Settings</h1>
+
+      <p className="section-label mb-2">Account</p>
+      <div className="panel mb-2 overflow-hidden">
+        <div className="row !cursor-default">
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <User size={16} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[15px] font-semibold">{session.username}</p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[var(--ink-muted)]">
-              <Cloud size={12} />
-              All changes saved
-              <span className="sr-only">{savePulse}</span>
+            <p className="text-[15px] font-bold">{user.name || user.email}</p>
+            <p className="text-[12px] text-[var(--ink-muted)]">{user.email}</p>
+            <p className="mt-0.5 text-[11px] text-[var(--ink-faint)]">
+              Synced to Neon Postgres
             </p>
           </div>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={signOut}
-        className="card card-row mb-6 fade-up fade-up-delay-1"
-      >
-        <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--borrow-soft)] text-[var(--borrow)]">
-          <LogOut size={18} />
+      <button type="button" onClick={onSignOut} className="panel row mb-5">
+        <div className="grid h-9 w-9 place-items-center bg-[var(--borrow-soft)] text-[var(--borrow)]" style={{ borderRadius: "var(--radius)" }}>
+          <LogOut size={16} />
         </div>
-        <span className="text-[15px] font-semibold text-[var(--borrow)]">
-          Log out
-        </span>
+        <span className="text-[15px] font-bold text-[var(--borrow)]">Log out</span>
       </button>
 
       <p className="section-label mb-2">Appearance</p>
-      <div className="card mb-6 space-y-5 p-4 fade-up fade-up-delay-2">
+      <div className="panel mb-5 space-y-4 p-4">
         <div>
-          <p className="mb-2 text-[14px] font-semibold">Theme</p>
+          <p className="mb-2 text-[14px] font-bold">Theme</p>
           <SegmentedControl
             ariaLabel="Theme"
             value={prefs.theme}
-            onChange={(theme: ThemeMode) => updatePreferences({ theme })}
+            onChange={(theme: ThemeMode) => void updatePreferences({ theme })}
             options={[
               { value: "auto", label: "Auto" },
               { value: "light", label: "Light" },
@@ -156,29 +146,30 @@ export default function SettingsPage() {
             ]}
           />
         </div>
-
         <div>
-          <p className="mb-2 text-[14px] font-semibold">Accent color</p>
-          <div className="flex flex-wrap gap-3">
+          <p className="mb-2 text-[14px] font-bold">Accent</p>
+          <div className="flex flex-wrap gap-2">
             {(Object.keys(ACCENTS) as AccentId[]).map((id) => (
               <button
                 key={id}
                 type="button"
                 aria-label={ACCENTS[id].label}
-                onClick={() => updatePreferences({ accent: id })}
-                className="grid h-9 w-9 place-items-center rounded-full"
-                style={{ background: ACCENTS[id].value }}
+                onClick={() => void updatePreferences({ accent: id })}
+                className="grid h-8 w-8 place-items-center"
+                style={{
+                  background: ACCENTS[id].value,
+                  borderRadius: "var(--radius)",
+                }}
               >
                 {prefs.accent === id && (
-                  <Check size={16} color="white" strokeWidth={3} />
+                  <Check size={14} color="white" strokeWidth={3} />
                 )}
               </button>
             ))}
           </div>
         </div>
-
         <div>
-          <p className="mb-2 text-[14px] font-semibold">Currency</p>
+          <p className="mb-2 text-[14px] font-bold">Currency</p>
           <div className="grid grid-cols-4 gap-2">
             {CURRENCIES.map((c) => {
               const active = prefs.currency === c.code;
@@ -187,10 +178,11 @@ export default function SettingsPage() {
                   key={c.code}
                   type="button"
                   onClick={() =>
-                    updatePreferences({ currency: c.code as CurrencyCode })
+                    void updatePreferences({ currency: c.code as CurrencyCode })
                   }
-                  className="rounded-[12px] border px-1 py-2.5 text-[12px] font-semibold"
+                  className="border px-1 py-2 text-[11px] font-bold"
                   style={{
+                    borderRadius: "var(--radius)",
                     borderColor: active ? "var(--accent)" : "var(--line)",
                     background: active ? "var(--accent-soft)" : "var(--surface)",
                     color: active ? "var(--accent-ink)" : "var(--ink-muted)",
@@ -202,13 +194,14 @@ export default function SettingsPage() {
             })}
           </div>
         </div>
-
         <div>
-          <p className="mb-2 text-[14px] font-semibold">List density</p>
+          <p className="mb-2 text-[14px] font-bold">List density</p>
           <SegmentedControl
             ariaLabel="List density"
             value={prefs.density}
-            onChange={(density: ListDensity) => updatePreferences({ density })}
+            onChange={(density: ListDensity) =>
+              void updatePreferences({ density })
+            }
             options={[
               { value: "compact", label: "Compact" },
               { value: "comfortable", label: "Comfortable" },
@@ -218,17 +211,14 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="card mb-2 overflow-hidden fade-up fade-up-delay-2">
-        <div className="card-row !cursor-default">
-          <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-            <Shield size={18} />
+      <div className="panel mb-2 overflow-hidden">
+        <div className="row !cursor-default">
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <Shield size={16} />
           </div>
           <div className="min-w-0 flex-1 pr-2">
-            <p className="text-[14px] font-semibold leading-snug">
+            <p className="text-[14px] font-bold leading-snug">
               Confirm before deleting or settling
-            </p>
-            <p className="mt-0.5 text-[12px] text-[var(--ink-muted)]">
-              Asks before you delete an entry or mark it returned/paid.
             </p>
           </div>
           <button
@@ -237,51 +227,71 @@ export default function SettingsPage() {
             data-on={prefs.confirmActions}
             aria-pressed={prefs.confirmActions}
             onClick={() =>
-              updatePreferences({ confirmActions: !prefs.confirmActions })
+              void updatePreferences({ confirmActions: !prefs.confirmActions })
             }
           >
             <span />
           </button>
         </div>
       </div>
-      <p className="mb-6 px-1 text-[12px] text-[var(--ink-faint)]">
-        Turn this off to settle and delete entries in a single tap.
+      <p className="mb-5 px-1 text-[12px] text-[var(--ink-faint)]">
+        Turn off for one-tap settle/delete.
       </p>
 
       <p className="section-label mb-2">Data</p>
-      <div className="card mb-2 overflow-hidden fade-up fade-up-delay-3">
-        <button type="button" className="card-row" onClick={exportJson}>
-          <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-            <Download size={18} />
+      <div className="panel mb-2 overflow-hidden">
+        <button
+          type="button"
+          className="row"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await loadDemo();
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <Beaker size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-semibold">Copy all data (JSON)</p>
+            <p className="text-[14px] font-bold">Load fictional sample</p>
+            <p className="text-[12px] text-[var(--ink-muted)]">
+              Alex, Jordan, Riley, Morgan — not real people
+            </p>
+          </div>
+        </button>
+        <button type="button" className="row" onClick={exportJson}>
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <Download size={16} />
+          </div>
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-[14px] font-bold">Export JSON</p>
             <p className="text-[12px] text-[var(--ink-muted)]">
               {counts.people} people · {counts.entries} entries
             </p>
           </div>
         </button>
-        <button type="button" className="card-row" onClick={exportCsv}>
-          <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-            <FileSpreadsheet size={18} />
+        <button type="button" className="row" onClick={exportCsv}>
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <FileSpreadsheet size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-semibold">Export as CSV</p>
-            <p className="text-[12px] text-[var(--ink-muted)]">
-              Opens in Numbers, Excel, or Sheets.
-            </p>
+            <p className="text-[14px] font-bold">Export CSV</p>
           </div>
         </button>
         <button
           type="button"
-          className="card-row"
+          className="row"
           onClick={() => fileRef.current?.click()}
         >
-          <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-            <Upload size={18} />
+          <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+            <Upload size={16} />
           </div>
           <div className="min-w-0 flex-1 text-left">
-            <p className="text-[14px] font-semibold">Import data (JSON)</p>
+            <p className="text-[14px] font-bold">Import JSON</p>
           </div>
         </button>
         <input
@@ -296,20 +306,18 @@ export default function SettingsPage() {
           }}
         />
       </div>
-      <p className="mb-6 px-1 text-[12px] text-[var(--ink-faint)]">
-        Your ledger saves automatically to this account. Exporting gives you a
-        copy you control.
+      <p className="mb-5 px-1 text-[12px] text-[var(--ink-faint)]">
+        Ledger syncs to your Neon database. Exports are copies you control.
       </p>
 
       <p className="section-label mb-2">About</p>
-      <div className="card card-row !cursor-default fade-up fade-up-delay-3">
-        <div className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--surface-2)] text-[var(--ink-muted)]">
-          <Info size={18} />
+      <div className="panel row !cursor-default">
+        <div className="grid h-9 w-9 place-items-center bg-[var(--surface-2)] text-[var(--ink-muted)]" style={{ borderRadius: "var(--radius)" }}>
+          <Info size={16} />
         </div>
         <p className="text-[13px] leading-relaxed text-[var(--ink-muted)]">
-          <span className="font-semibold text-[var(--ink)]">Quittance</span> — A
-          private way to track who owes what — synced to your account, seen only
-          by you.
+          <span className="font-bold text-[var(--ink)]">Quittance</span> —
+          private IOUs for money and items, backed by Neon Auth + Postgres.
         </p>
       </div>
 

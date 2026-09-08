@@ -1,9 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type {
-  Account,
   AccentId,
   CurrencyCode,
   Entry,
@@ -13,252 +11,132 @@ import type {
   ThemeMode,
 } from "@/lib/types";
 import { DEFAULT_PREFERENCES } from "@/lib/types";
-import { createEmptyLedger, createSeedLedger } from "@/lib/seed";
-import { ensurePerson } from "@/lib/ledger";
-import { hashPassword, randomSalt } from "@/lib/crypto";
 
-interface Session {
-  accountId: string;
-  username: string;
+interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
 }
 
 interface AppStore {
   hydrated: boolean;
-  accounts: Account[];
-  ledgers: Record<string, LedgerState>;
-  session: Session | null;
-  savePulse: number;
+  loading: boolean;
+  user: UserInfo | null;
+  ledger: LedgerState | null;
   setHydrated: (v: boolean) => void;
-  signUp: (username: string, password: string, demo?: boolean) => Promise<string | null>;
-  signIn: (username: string, password: string) => Promise<string | null>;
-  signOut: () => void;
-  tryDemo: () => Promise<void>;
-  updatePreferences: ( partial: Partial<Preferences>) => void;
-  addEntry: (input: Omit<Entry, "id" | "createdAt" | "personId" | "settled" | "paid"> & {
+  refresh: () => Promise<void>;
+  signOutLocal: () => void;
+  updatePreferences: (partial: Partial<Preferences>) => Promise<void>;
+  addEntry: (input: {
     personName: string;
-    paid?: number;
-  }) => void;
-  settleEntry: (entryId: string) => void;
-  deleteEntry: (entryId: string) => void;
-  importLedger: (data: LedgerState) => void;
-  replaceLedger: (data: LedgerState) => void;
-  bumpSave: () => void;
+    direction: Entry["direction"];
+    assetType: Entry["assetType"];
+    amount: number;
+    itemName?: string;
+    category?: string;
+    date: string;
+    expectedBack?: string;
+    reminder?: string;
+  }) => Promise<void>;
+  settleEntry: (entryId: string) => Promise<void>;
+  deleteEntry: (entryId: string) => Promise<void>;
+  loadDemo: () => Promise<void>;
+  importLedger: (data: LedgerState) => Promise<void>;
 }
 
-function emptyPrefs(): Preferences {
-  return { ...DEFAULT_PREFERENCES };
-}
+export const useAppStore = create<AppStore>((set, get) => ({
+  hydrated: false,
+  loading: false,
+  user: null,
+  ledger: null,
 
-export const useAppStore = create<AppStore>()(
-  persist(
-    (set, get) => ({
-      hydrated: false,
-      accounts: [],
-      ledgers: {},
-      session: null,
-      savePulse: 0,
+  setHydrated: (v) => set({ hydrated: v }),
 
-      setHydrated: (v) => set({ hydrated: v }),
+  signOutLocal: () => set({ user: null, ledger: null }),
 
-      bumpSave: () => set({ savePulse: Date.now() }),
+  refresh: async () => {
+    set({ loading: true });
+    try {
+      const res = await fetch("/api/ledger", { cache: "no-store" });
+      if (res.status === 401) {
+        set({ user: null, ledger: null, hydrated: true, loading: false });
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to load ledger");
+      const data = await res.json();
+      set({
+        user: data.user,
+        ledger: data.ledger,
+        hydrated: true,
+        loading: false,
+      });
+    } catch {
+      set({ hydrated: true, loading: false });
+    }
+  },
 
-      signUp: async (username, password, demo = false) => {
-        const name = username.trim().toLowerCase();
-        if (!name || password.length < 4) {
-          return "Choose a username and a password (4+ characters).";
-        }
-        if (get().accounts.some((a) => a.username === name)) {
-          return "That username is taken.";
-        }
-        const salt = randomSalt();
-        const passwordHash = `${salt}.${await hashPassword(password, salt)}`;
-        const account: Account = {
-          id: `a-${crypto.randomUUID().slice(0, 8)}`,
-          username: name,
-          passwordHash,
-          createdAt: new Date().toISOString(),
-        };
-        set((s) => ({
-          accounts: [...s.accounts, account],
-          ledgers: {
-            ...s.ledgers,
-            [account.id]: demo ? createSeedLedger() : createEmptyLedger(),
-          },
-          session: { accountId: account.id, username: name },
-          savePulse: Date.now(),
-        }));
-        return null;
-      },
+  updatePreferences: async (partial) => {
+    const ledger = get().ledger;
+    if (!ledger) return;
+    const next = { ...ledger.preferences, ...partial };
+    set({ ledger: { ...ledger, preferences: next } });
+    await fetch("/api/preferences", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(next),
+    });
+  },
 
-      signIn: async (username, password) => {
-        const name = username.trim().toLowerCase();
-        const account = get().accounts.find((a) => a.username === name);
-        if (!account) return "No account with that username.";
-        const [salt, hash] = account.passwordHash.split(".");
-        const attempt = await hashPassword(password, salt);
-        if (attempt !== hash) return "Wrong password.";
-        set({
-          session: { accountId: account.id, username: name },
-          savePulse: Date.now(),
-        });
-        return null;
-      },
+  addEntry: async (input) => {
+    await fetch("/api/entries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    await get().refresh();
+  },
 
-      signOut: () => set({ session: null }),
+  settleEntry: async (entryId) => {
+    await fetch("/api/entries", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "settle", entryId }),
+    });
+    await get().refresh();
+  },
 
-      tryDemo: async () => {
-        const existing = get().accounts.find((a) => a.username === "demo");
-        if (existing) {
-          set({
-            session: { accountId: existing.id, username: "demo" },
-            ledgers: {
-              ...get().ledgers,
-              [existing.id]: createSeedLedger(),
-            },
-            savePulse: Date.now(),
-          });
-          return;
-        }
-        await get().signUp("demo", "demo1234", true);
-      },
+  deleteEntry: async (entryId) => {
+    await fetch(`/api/entries?entryId=${encodeURIComponent(entryId)}`, {
+      method: "DELETE",
+    });
+    await get().refresh();
+  },
 
-      updatePreferences: (partial) => {
-        const { session, ledgers } = get();
-        if (!session) return;
-        const ledger = ledgers[session.accountId];
-        if (!ledger) return;
-        set({
-          ledgers: {
-            ...ledgers,
-            [session.accountId]: {
-              ...ledger,
-              preferences: { ...ledger.preferences, ...partial },
-            },
-          },
-          savePulse: Date.now(),
-        });
-      },
+  loadDemo: async () => {
+    const res = await fetch("/api/demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "demo" }),
+    });
+    if (!res.ok) throw new Error("Demo load failed");
+    const data = await res.json();
+    set((s) => ({ ledger: data.ledger, user: s.user }));
+  },
 
-      addEntry: (input) => {
-        const { session, ledgers } = get();
-        if (!session) return;
-        const ledger = ledgers[session.accountId];
-        if (!ledger) return;
-        const { people, person } = ensurePerson(ledger.people, input.personName);
-        const entry: Entry = {
-          id: `e-${crypto.randomUUID().slice(0, 8)}`,
-          personId: person.id,
-          direction: input.direction,
-          assetType: input.assetType,
-          amount: input.amount,
-          paid: input.paid ?? 0,
-          itemName: input.itemName,
-          category: input.category,
-          photoDataUrl: input.photoDataUrl,
-          note: input.note,
-          date: input.date,
-          expectedBack: input.expectedBack,
-          reminder: input.reminder,
-          reminderDate: input.reminderDate,
-          settled: false,
-          createdAt: new Date().toISOString(),
-        };
-        set({
-          ledgers: {
-            ...ledgers,
-            [session.accountId]: {
-              ...ledger,
-              people,
-              entries: [entry, ...ledger.entries],
-            },
-          },
-          savePulse: Date.now(),
-        });
-      },
-
-      settleEntry: (entryId) => {
-        const { session, ledgers } = get();
-        if (!session) return;
-        const ledger = ledgers[session.accountId];
-        if (!ledger) return;
-        set({
-          ledgers: {
-            ...ledgers,
-            [session.accountId]: {
-              ...ledger,
-              entries: ledger.entries.map((e) =>
-                e.id === entryId
-                  ? {
-                      ...e,
-                      settled: true,
-                      paid: e.assetType === "money" ? e.amount : e.paid,
-                      settledAt: new Date().toISOString().slice(0, 10),
-                    }
-                  : e,
-              ),
-            },
-          },
-          savePulse: Date.now(),
-        });
-      },
-
-      deleteEntry: (entryId) => {
-        const { session, ledgers } = get();
-        if (!session) return;
-        const ledger = ledgers[session.accountId];
-        if (!ledger) return;
-        set({
-          ledgers: {
-            ...ledgers,
-            [session.accountId]: {
-              ...ledger,
-              entries: ledger.entries.filter((e) => e.id !== entryId),
-            },
-          },
-          savePulse: Date.now(),
-        });
-      },
-
-      importLedger: (data) => {
-        const { session, ledgers } = get();
-        if (!session) return;
-        set({
-          ledgers: {
-            ...ledgers,
-            [session.accountId]: {
-              people: data.people ?? [],
-              entries: data.entries ?? [],
-              preferences: {
-                ...emptyPrefs(),
-                ...(data.preferences ?? {}),
-              },
-            },
-          },
-          savePulse: Date.now(),
-        });
-      },
-
-      replaceLedger: (data) => get().importLedger(data),
-    }),
-    {
-      name: "quittance-v1",
-      partialize: (s) => ({
-        accounts: s.accounts,
-        ledgers: s.ledgers,
-        session: s.session,
-      }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
-      },
-    },
-  ),
-);
+  importLedger: async (ledgerData) => {
+    const res = await fetch("/api/demo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "import", ledger: ledgerData }),
+    });
+    if (!res.ok) throw new Error("Import failed");
+    const data = await res.json();
+    set((s) => ({ ledger: data.ledger, user: s.user }));
+  },
+}));
 
 export function useActiveLedger(): LedgerState | null {
-  const session = useAppStore((s) => s.session);
-  const ledgers = useAppStore((s) => s.ledgers);
-  if (!session) return null;
-  return ledgers[session.accountId] ?? null;
+  return useAppStore((s) => s.ledger);
 }
 
 export function usePrefs(): Preferences {
@@ -266,9 +144,9 @@ export function usePrefs(): Preferences {
   return ledger?.preferences ?? DEFAULT_PREFERENCES;
 }
 
-export type PrefHelpers = {
-  setTheme: (theme: ThemeMode) => void;
-  setAccent: (accent: AccentId) => void;
-  setCurrency: (currency: CurrencyCode) => void;
-  setDensity: (density: ListDensity) => void;
+export type PrefPatch = {
+  theme?: ThemeMode;
+  accent?: AccentId;
+  currency?: CurrencyCode;
+  density?: ListDensity;
 };

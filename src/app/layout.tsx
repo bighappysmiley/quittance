@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import { AppProviders } from "@/components/AppProviders";
 import "./globals.css";
 
-const brand = Fraunces({
-  variable: "--font-brand",
+const ui = Space_Grotesk({
+  variable: "--font-ui",
   subsets: ["latin"],
 });
 
-const body = Manrope({
-  variable: "--font-body",
+const num = IBM_Plex_Mono({
+  variable: "--font-num",
+  weight: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "Quittance",
-  description:
-    "A private way to track who owes what — synced to your account, seen only by you.",
+  description: "Private IOU tracker with accounts synced to Neon Postgres.",
   appleWebApp: {
     capable: true,
     title: "Quittance",
@@ -29,10 +29,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme="light"
-      data-density="compact"
-      className={`${brand.variable} ${body.variable} h-full antialiased`}
+      data-density="comfortable"
+      className={`${ui.variable} ${num.variable} h-full antialiased`}
     >
-      <body className="app-root min-h-full">
+      <body className="min-h-full">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

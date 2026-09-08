@@ -1,33 +1,25 @@
 # Quittance
 
-Private IOU and debt tracker — money and items, per account, with a thin mobile-first ledger.
-
-## Features
-
-- **Accounts** — sign up / sign in (data stored per account in the browser)
-- **Ledger** — net position, All / Lent / Borrowed filters, outstanding people
-- **Activity** — insights, who owes you most, timeline
-- **New record** — lend or borrow, money or item, categories, photo, reminders
-- **Settings** — theme, accent, currency, density, confirm toggle, JSON/CSV export & import
-- **Demo ledger** — open with sample data matching the product screens
+Private IOU tracker for money and items. Accounts auth via **Neon Auth**; ledger data lives in **Neon Postgres**.
 
 ## Live
 
-Working now: [https://quittanceledger.netlify.app](https://quittanceledger.netlify.app)
+https://quittanceledger.netlify.app
 
-Custom domain `quittance.bhswebsite.org` needs a Cloudflare DNS CNAME (authoritative NS are Cloudflare, not Netlify):
+## Stack
 
-| Type | Name | Target | Proxy |
-|------|------|--------|-------|
-| CNAME | `quittance` | `quittanceledger.netlify.app` | Proxied |
-
-Netlify auto-deploys from `main`.
+- Next.js App Router
+- Neon Auth (email/password)
+- Neon Postgres (`people`, `entries`, `preferences`)
+- Netlify deploy from `main`
 
 ## Develop
 
 ```bash
+cp .env.example .env.local
+# fill DATABASE_URL, NEON_AUTH_BASE_URL, NEON_AUTH_COOKIE_SECRET
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and tap **Open demo ledger**.
+Create an account, then optionally **Load fictional sample** in Settings (Alex / Jordan / Riley / Morgan — not real people).

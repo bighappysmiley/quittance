@@ -25,7 +25,7 @@ export default function EntryPage() {
   const entry = ledger.entries.find((e) => e.id === params.id);
   if (!entry) {
     return (
-      <div className="phone-shell page-pad">
+      <div className="app-shell page-pad">
         <p>Entry not found.</p>
         <Link href="/activity" className="text-[var(--accent)]">
           Back
@@ -43,7 +43,7 @@ export default function EntryPage() {
   }
 
   return (
-    <div className="phone-shell page-pad">
+    <div className="app-shell page-pad">
       <button
         type="button"
         onClick={() => router.back()}
@@ -52,7 +52,7 @@ export default function EntryPage() {
         <ChevronLeft size={18} /> Back
       </button>
 
-      <div className="card p-5 fade-up">
+      <div className="panel p-5">
         {person && (
           <div className="mb-4 flex items-center gap-3">
             <Avatar name={person.name} color={person.color} />
@@ -75,7 +75,7 @@ export default function EntryPage() {
                 ? "tone-borrow"
                 : ""
           }`}
-          style={{ fontFamily: "var(--font-display)" }}
+         
         >
           {entry.assetType === "money"
             ? formatMoney(

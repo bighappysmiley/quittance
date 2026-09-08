@@ -24,7 +24,7 @@ export default function PersonPage() {
   const person = getPerson(ledger, params.id);
   if (!person) {
     return (
-      <div className="phone-shell page-pad">
+      <div className="app-shell page-pad">
         <p>Person not found.</p>
         <Link href="/ledger" className="text-[var(--accent)]">
           Back
@@ -43,7 +43,7 @@ export default function PersonPage() {
   }
 
   return (
-    <div className="phone-shell page-pad">
+    <div className="app-shell page-pad">
       <button
         type="button"
         onClick={() => router.back()}
@@ -52,12 +52,12 @@ export default function PersonPage() {
         <ChevronLeft size={18} /> Back
       </button>
 
-      <div className="mb-6 flex items-center gap-3 fade-up">
+      <div className="mb-6 flex items-center gap-3">
         <Avatar name={person.name} color={person.color} size={56} />
         <div>
           <h1
             className="text-[28px] font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
+           
           >
             {person.name}
           </h1>
@@ -67,11 +67,11 @@ export default function PersonPage() {
         </div>
       </div>
 
-      <div className="space-y-2 fade-up fade-up-delay-1">
+      <div className="space-y-2">
         {entries.map((entry) => {
           const display = entryDisplayAmount(entry, prefs.currency);
           return (
-            <div key={entry.id} className="card p-4">
+            <div key={entry.id} className="panel p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[15px] font-semibold">

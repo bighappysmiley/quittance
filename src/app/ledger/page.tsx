@@ -7,7 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Avatar } from "@/components/Avatar";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { EmptyLedger, NetPositionCard } from "@/components/NetPositionCard";
-import { useActiveLedger } from "@/store/useAppStore";
+import { useActiveLedger, useAppStore } from "@/store/useAppStore";
 import { netPosition, personBalances } from "@/lib/ledger";
 import {
   entryDisplayAmount,
@@ -19,10 +19,12 @@ import type { LedgerFilter } from "@/lib/types";
 
 export default function LedgerPage() {
   const ledger = useActiveLedger();
+  const loadDemo = useAppStore((s) => s.loadDemo);
   const [filter, setFilter] = useState<LedgerFilter>("all");
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [sort, setSort] = useState<"recent" | "amount">("recent");
+  const [demoBusy, setDemoBusy] = useState(false);
 
   const stats = useMemo(
     () => (ledger ? netPosition(ledger) : null),
@@ -34,62 +36,47 @@ export default function LedgerPage() {
     let list = personBalances(ledger);
     if (filter === "lent") {
       list = list.filter(
-        (r) =>
-          r.moneySigned > 0 ||
-          r.itemLent.length > 0 ||
-          r.primaryDirection === "lend",
+        (r) => r.moneySigned > 0 || r.itemLent.length > 0,
       );
     } else if (filter === "borrowed") {
       list = list.filter(
-        (r) =>
-          r.moneySigned < 0 ||
-          r.itemBorrowed.length > 0 ||
-          r.primaryDirection === "borrow",
+        (r) => r.moneySigned < 0 || r.itemBorrowed.length > 0,
       );
     }
     if (query.trim()) {
       const q = query.trim().toLowerCase();
       list = list.filter((r) => r.person.name.toLowerCase().includes(q));
     }
-    list = [...list].sort((a, b) => {
-      if (sort === "amount") {
-        return Math.abs(b.moneySigned) - Math.abs(a.moneySigned);
-      }
-      return b.latestDate.localeCompare(a.latestDate);
-    });
-    return list;
+    return [...list].sort((a, b) =>
+      sort === "amount"
+        ? Math.abs(b.moneySigned) - Math.abs(a.moneySigned)
+        : b.latestDate.localeCompare(a.latestDate),
+    );
   }, [ledger, filter, query, sort]);
 
   if (!ledger || !stats) return null;
   const currency = ledger.preferences.currency;
 
   return (
-    <div className="phone-shell page-pad">
-      <header className="mb-5 flex items-start justify-between fade-up">
+    <div className="app-shell page-pad">
+      <header className="mb-4 flex items-start justify-between">
         <div>
           <p className="section-label">{todayHeader()}</p>
-          <h1
-            className="mt-1 text-[34px] font-semibold tracking-tight"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Quittance
-          </h1>
+          <h1 className="mt-1 text-[30px] font-bold tracking-tight">Quittance</h1>
         </div>
-        <div className="flex items-center gap-2 pt-1">
-          <span className="sync-dot" title="Saved" />
-          <button
-            type="button"
-            aria-label="Search"
-            onClick={() => setSearchOpen((v) => !v)}
-            className="grid h-10 w-10 place-items-center rounded-[12px] border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-card)]"
-          >
-            <Search size={18} />
-          </button>
-        </div>
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => setSearchOpen((v) => !v)}
+          className="grid h-9 w-9 place-items-center border border-[var(--line)] bg-[var(--surface)]"
+          style={{ borderRadius: "var(--radius)" }}
+        >
+          <Search size={16} />
+        </button>
       </header>
 
       {searchOpen && (
-        <div className="mb-4 fade-up">
+        <div className="mb-3">
           <input
             autoFocus
             className="input-field"
@@ -102,7 +89,7 @@ export default function LedgerPage() {
 
       <NetPositionCard {...stats} currency={currency} />
 
-      <div className="mt-5 fade-up fade-up-delay-1">
+      <div className="mt-4">
         <SegmentedControl
           ariaLabel="Filter ledger"
           value={filter}
@@ -115,12 +102,12 @@ export default function LedgerPage() {
         />
       </div>
 
-      <div className="mt-5 mb-2 flex items-center justify-between fade-up fade-up-delay-2">
+      <div className="mt-4 mb-2 flex items-center justify-between">
         <p className="section-label">Outstanding</p>
         <button
           type="button"
           onClick={() => setSort((s) => (s === "recent" ? "amount" : "recent"))}
-          className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-faint)]"
+          className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--ink-faint)]"
         >
           {sort === "recent" ? "Most recent" : "By amount"}
           <ArrowDownUp size={12} />
@@ -128,9 +115,30 @@ export default function LedgerPage() {
       </div>
 
       {rows.length === 0 ? (
-        <EmptyLedger />
+        <div className="space-y-3">
+          <EmptyLedger />
+          <button
+            type="button"
+            className="btn-secondary w-full"
+            disabled={demoBusy}
+            onClick={async () => {
+              setDemoBusy(true);
+              try {
+                await loadDemo();
+              } finally {
+                setDemoBusy(false);
+              }
+            }}
+          >
+            {demoBusy ? "Loading sample…" : "Load fictional sample ledger"}
+          </button>
+          <p className="px-1 text-[12px] text-[var(--ink-faint)]">
+            Sample uses made-up names (Alex, Jordan, Riley, Morgan) — not anyone
+            real.
+          </p>
+        </div>
       ) : (
-        <div className="card overflow-hidden fade-up fade-up-delay-3">
+        <div className="panel overflow-hidden">
           {rows.map((row) => {
             const moneyEntry = row.entries.find((e) => e.assetType === "money");
             const itemEntry = row.entries.find((e) => e.assetType === "item");
@@ -139,7 +147,6 @@ export default function LedgerPage() {
               : itemEntry
                 ? entryDisplayAmount(itemEntry, currency)
                 : { text: "—", tone: "neutral" as const };
-
             const dirWord =
               row.moneySigned < 0 || row.itemBorrowed.length
                 ? "Borrowed"
@@ -148,25 +155,25 @@ export default function LedgerPage() {
               row.paidTotal > 0
                 ? ` · ${formatMoney(row.paidTotal, currency)} paid`
                 : "";
-            const sub = `${dirWord} ${relativeDateLabel(row.latestDate)}${paidBit}`;
 
             return (
               <Link
                 key={row.person.id}
                 href={`/person/${row.person.id}`}
-                className="card-row"
+                className="row"
               >
                 <Avatar name={row.person.name} color={row.person.color} />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold">
+                  <p className="truncate text-[15px] font-bold">
                     {row.person.name}
                   </p>
                   <p className="truncate text-[12px] text-[var(--ink-muted)]">
-                    {sub}
+                    {dirWord} {relativeDateLabel(row.latestDate)}
+                    {paidBit}
                   </p>
                 </div>
                 <p
-                  className={`shrink-0 text-[15px] font-semibold ${
+                  className={`amount shrink-0 text-[15px] font-semibold ${
                     display.tone === "lend"
                       ? "tone-lend"
                       : display.tone === "borrow"
@@ -183,7 +190,7 @@ export default function LedgerPage() {
       )}
 
       <Link href="/new" className="fab" aria-label="New record">
-        <Plus size={26} strokeWidth={2.4} />
+        <Plus size={24} strokeWidth={2.4} />
       </Link>
       <BottomNav />
     </div>
