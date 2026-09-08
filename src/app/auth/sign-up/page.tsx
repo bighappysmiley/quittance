@@ -1,17 +1,37 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { signUpWithEmail } from "./actions";
+import { authClient } from "@/lib/auth/client";
 
 export default function SignUpPage() {
-  const [state, formAction, pending] = useActionState(signUpWithEmail, null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (state?.ok) {
-      window.location.assign("/ledger");
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+
+    const form = new FormData(e.currentTarget);
+    const name = String(form.get("name") || "");
+    const email = String(form.get("email") || "");
+    const password = String(form.get("password") || "");
+
+    const { error: authError } = await authClient.signUp.email({
+      name,
+      email,
+      password,
+    });
+
+    if (authError) {
+      setPending(false);
+      setError(authError.message || "Could not create account");
+      return;
     }
-  }, [state]);
+
+    window.location.href = "/ledger";
+  }
 
   return (
     <div className="welcome-shell page-pad flex min-h-dvh flex-col justify-center">
@@ -25,7 +45,7 @@ export default function SignUpPage() {
         Start a private ledger for money and things — yours alone.
       </p>
 
-      <form action={formAction} className="panel mt-8 space-y-3 p-4">
+      <form onSubmit={onSubmit} className="panel mt-8 space-y-3 p-4">
         <label className="block text-[12px] font-bold text-[var(--ink-muted)]">
           Name
           <input
@@ -59,11 +79,9 @@ export default function SignUpPage() {
             placeholder="At least 8 characters"
           />
         </label>
-        {state?.error && (
-          <p className="text-sm text-[var(--danger)]">{state.error}</p>
-        )}
-        <button type="submit" disabled={pending || !!state?.ok} className="btn-primary w-full">
-          {pending || state?.ok ? "Creating…" : "Get started"}
+        {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+        <button type="submit" disabled={pending} className="btn-primary w-full">
+          {pending ? "Creating…" : "Get started"}
         </button>
       </form>
 

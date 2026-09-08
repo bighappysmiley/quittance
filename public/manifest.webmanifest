@@ -2,7 +2,7 @@
   "name": "Quittance",
   "short_name": "Quittance",
   "description": "A private way to track who owes what.",
-  "start_url": "/ledger",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0e1110",
   "theme_color": "#0e1110",

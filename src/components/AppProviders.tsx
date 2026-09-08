@@ -17,36 +17,26 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Re-check session on every route change so post-login cookies are picked up
-  // before we decide to kick someone off a protected page.
   useEffect(() => {
-    let cancelled = false;
+    void refresh();
+  }, [refresh]);
 
-    (async () => {
-      await refresh();
-      if (cancelled) return;
+  useEffect(() => {
+    if (!hydrated || loading) return;
 
-      const { user: nextUser } = useAppStore.getState();
-      const publicRoute = isPublicRoute(pathname);
+    const publicRoute = isPublicRoute(pathname);
+    if (!user && !publicRoute) {
+      router.replace("/auth/sign-in");
+      return;
+    }
+    if (user && publicRoute) {
+      router.replace("/ledger");
+    }
+  }, [hydrated, loading, user, pathname, router]);
 
-      if (!nextUser && !publicRoute) {
-        router.replace("/auth/sign-in");
-        return;
-      }
-      if (nextUser && publicRoute) {
-        router.replace("/ledger");
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, refresh, router]);
-
-  const onPublic = isPublicRoute(pathname);
-  const waiting = !hydrated || (!onPublic && (loading || !user));
-
-  if (waiting) {
+  // Only block the first boot — never unmount the app again (that caused
+  // stuck / broken navigations after sign-in).
+  if (!hydrated) {
     return (
       <div className="welcome-shell grid min-h-dvh place-items-center">
         <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>

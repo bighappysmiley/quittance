@@ -1,17 +1,36 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { signInWithEmail } from "./actions";
+import { authClient } from "@/lib/auth/client";
 
 export default function SignInPage() {
-  const [state, formAction, pending] = useActionState(signInWithEmail, null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (state?.ok) {
-      window.location.assign("/ledger");
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get("email") || "");
+    const password = String(form.get("password") || "");
+
+    const { error: authError } = await authClient.signIn.email({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setPending(false);
+      setError(authError.message || "Could not sign in");
+      return;
     }
-  }, [state]);
+
+    // Full reload so the session cookie is picked up cleanly.
+    window.location.href = "/ledger";
+  }
 
   return (
     <div className="welcome-shell page-pad flex min-h-dvh flex-col justify-center">
@@ -23,7 +42,7 @@ export default function SignInPage() {
         Pick up where you left off — your ledger is waiting.
       </p>
 
-      <form action={formAction} className="panel mt-8 space-y-3 p-4">
+      <form onSubmit={onSubmit} className="panel mt-8 space-y-3 p-4">
         <label className="block text-[12px] font-bold text-[var(--ink-muted)]">
           Email
           <input
@@ -46,11 +65,9 @@ export default function SignInPage() {
             placeholder="Your password"
           />
         </label>
-        {state?.error && (
-          <p className="text-sm text-[var(--danger)]">{state.error}</p>
-        )}
-        <button type="submit" disabled={pending || !!state?.ok} className="btn-primary w-full">
-          {pending || state?.ok ? "Signing in…" : "Sign in"}
+        {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
+        <button type="submit" disabled={pending} className="btn-primary w-full">
+          {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
 

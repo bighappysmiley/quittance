@@ -57,7 +57,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   refresh: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/api/ledger", { cache: "no-store" });
+      const res = await fetch("/api/ledger", {
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      });
       if (res.status === 401) {
         set({ user: null, ledger: null, hydrated: true, loading: false });
         return;
@@ -71,6 +74,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         loading: false,
       });
     } catch {
+      // Don't wipe an existing session on a blip — only finish boot.
       set({ hydrated: true, loading: false });
     }
   },
