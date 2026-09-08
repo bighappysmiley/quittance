@@ -2,11 +2,13 @@
   "name": "Quittance",
   "short_name": "Quittance",
   "description": "A private way to track who owes what.",
-  "start_url": "/",
+  "start_url": "/ledger",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0e1110",
   "theme_color": "#0e1110",
   "orientation": "portrait",
+  "id": "/",
   "icons": [
     {
       "src": "/icons/icon-192.png",

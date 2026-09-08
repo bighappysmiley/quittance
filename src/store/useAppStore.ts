@@ -24,7 +24,7 @@ interface AppStore {
   user: UserInfo | null;
   ledger: LedgerState | null;
   setHydrated: (v: boolean) => void;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<"ok" | "unauthorized" | "error">;
   signOutLocal: () => void;
   updatePreferences: (partial: Partial<Preferences>) => Promise<void>;
   addEntry: (input: {
@@ -56,14 +56,27 @@ export const useAppStore = create<AppStore>((set, get) => ({
 
   refresh: async () => {
     set({ loading: true });
-    try {
+
+    const attempt = async () => {
       const res = await fetch("/api/ledger", {
         cache: "no-store",
-        signal: AbortSignal.timeout(15000),
+        credentials: "include",
+        signal: AbortSignal.timeout(20000),
       });
+      return res;
+    };
+
+    try {
+      let res = await attempt();
+      // Neon compute can be cold on reopen — retry once.
+      if (!res.ok && res.status !== 401) {
+        await new Promise((r) => setTimeout(r, 1200));
+        res = await attempt();
+      }
+
       if (res.status === 401) {
         set({ user: null, ledger: null, hydrated: true, loading: false });
-        return;
+        return "unauthorized";
       }
       if (!res.ok) throw new Error("Failed to load ledger");
       const data = await res.json();
@@ -73,9 +86,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
         hydrated: true,
         loading: false,
       });
+      return "ok";
     } catch {
-      // Don't wipe an existing session on a blip — only finish boot.
+      // Network / timeout on reopen — don't pretend the user signed out.
       set({ hydrated: true, loading: false });
+      return "error";
     }
   },
 
