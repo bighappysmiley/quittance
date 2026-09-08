@@ -63,23 +63,33 @@ export function AuthScreen() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(160deg, color-mix(in srgb, var(--accent) 35%, #1a2e26) 0%, #1c2430 55%, #2a1f1a 100%)",
+              "linear-gradient(165deg, #1f3d32 0%, #182029 48%, #2c211c 100%)",
           }}
         />
-        <div className="relative flex aspect-[4/3] flex-col justify-end p-5 text-white">
-          <div className="mb-auto flex items-center gap-2 text-sm text-white/75">
+        <div className="relative flex aspect-[4/3] flex-col p-5 text-white">
+          <div className="flex items-center gap-2 text-sm text-white/70">
             <Cloud size={16} />
-            Your private balance
+            Sample ledger
           </div>
-          <p className="text-xs uppercase tracking-[0.14em] text-white/55">
+          <p className="mt-auto text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
             Net position
           </p>
           <p
-            className="mt-1 text-5xl font-semibold tracking-tight"
+            className="mt-1 text-[44px] font-semibold tracking-tight text-[#e8c4b4]"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Clear the slate
+            −$38
           </p>
+          <div className="mt-4 grid grid-cols-2 gap-3 border-t border-white/10 pt-3 text-sm">
+            <div>
+              <p className="text-white/45">Owed to you</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#8fd6b0]">$2</p>
+            </div>
+            <div>
+              <p className="text-white/45">You owe</p>
+              <p className="mt-0.5 text-lg font-semibold text-[#e8c4b4]">$40</p>
+            </div>
+          </div>
         </div>
       </div>
 
