@@ -19,7 +19,6 @@ import {
   useAppStore,
   usePrefs,
 } from "@/store/useAppStore";
-import { authClient } from "@/lib/auth/client";
 import {
   ACCENTS,
   CURRENCIES,
