@@ -199,7 +199,11 @@ export function InstallBanner() {
               )}
               <button
                 type="button"
-                className={deferred ? "btn-ghost w-full" : "btn-primary w-full"}
+                className={
+                  deferred
+                    ? "w-full rounded-[var(--radius)] border border-[var(--line)] bg-transparent px-4 py-3 text-[15px] font-semibold text-[var(--ink)]"
+                    : "btn-primary w-full"
+                }
                 onClick={() => {
                   setIosGuide(false);
                   sessionStorage.setItem("quittance-install-dismissed", "1");
