@@ -11,6 +11,11 @@ Private IOU and debt tracker — money and items, per account, with a thin mobil
 - **Settings** — theme, accent, currency, density, confirm toggle, JSON/CSV export & import
 - **Demo ledger** — open with sample data matching the product screens
 
+## Live
+
+Production: [https://quittance.bhswebsite.org](https://quittance.bhswebsite.org)  
+Netlify auto-deploys from `main`.
+
 ## Develop
 
 ```bash
