@@ -1,11 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { signUpWithEmail } from "./actions";
 
 export default function SignUpPage() {
   const [state, formAction, pending] = useActionState(signUpWithEmail, null);
+
+  useEffect(() => {
+    if (state?.ok) {
+      window.location.assign("/ledger");
+    }
+  }, [state]);
 
   return (
     <div className="welcome-shell page-pad flex min-h-dvh flex-col justify-center">
@@ -56,8 +62,8 @@ export default function SignUpPage() {
         {state?.error && (
           <p className="text-sm text-[var(--danger)]">{state.error}</p>
         )}
-        <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Creating…" : "Get started"}
+        <button type="submit" disabled={pending || !!state?.ok} className="btn-primary w-full">
+          {pending || state?.ok ? "Creating…" : "Get started"}
         </button>
       </form>
 

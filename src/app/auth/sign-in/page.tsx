@@ -1,11 +1,17 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { signInWithEmail } from "./actions";
 
 export default function SignInPage() {
   const [state, formAction, pending] = useActionState(signInWithEmail, null);
+
+  useEffect(() => {
+    if (state?.ok) {
+      window.location.assign("/ledger");
+    }
+  }, [state]);
 
   return (
     <div className="welcome-shell page-pad flex min-h-dvh flex-col justify-center">
@@ -43,8 +49,8 @@ export default function SignInPage() {
         {state?.error && (
           <p className="text-sm text-[var(--danger)]">{state.error}</p>
         )}
-        <button type="submit" disabled={pending} className="btn-primary w-full">
-          {pending ? "Signing in…" : "Sign in"}
+        <button type="submit" disabled={pending || !!state?.ok} className="btn-primary w-full">
+          {pending || state?.ok ? "Signing in…" : "Sign in"}
         </button>
       </form>
 

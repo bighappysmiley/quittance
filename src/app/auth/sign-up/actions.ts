@@ -1,10 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth/server";
-import { redirect } from "next/navigation";
 
 export async function signUpWithEmail(
-  _prev: { error: string } | null,
+  _prev: { error?: string; ok?: boolean } | null,
   formData: FormData,
 ) {
   const { error } = await auth.signUp.email({
@@ -13,5 +12,5 @@ export async function signUpWithEmail(
     password: String(formData.get("password") || ""),
   });
   if (error) return { error: error.message || "Could not create account" };
-  redirect("/ledger");
+  return { ok: true };
 }
