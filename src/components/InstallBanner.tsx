@@ -161,7 +161,7 @@ export function InstallBanner() {
                       Safari
                     </>
                   ) : (
-                    <>Open the browser menu or install icon</>
+                    <>Open your browser’s menu</>
                   )}
                 </span>
               </li>
@@ -181,8 +181,7 @@ export function InstallBanner() {
                   3
                 </span>
                 <span className="pt-0.5">
-                  Tap Add — Quittance appears on your Home Screen with its glass
-                  icon
+                  Tap Add — Quittance shows up on your Home Screen
                 </span>
               </li>
             </ol>
@@ -194,7 +193,7 @@ export function InstallBanner() {
                   className="btn-primary w-full"
                   onClick={onInstallNative}
                 >
-                  Install Quittance
+                  Add Quittance
                 </button>
               )}
               <button
