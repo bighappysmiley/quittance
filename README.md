@@ -13,7 +13,14 @@ Private IOU and debt tracker — money and items, per account, with a thin mobil
 
 ## Live
 
-Production: [https://quittance.bhswebsite.org](https://quittance.bhswebsite.org)  
+Working now: [https://quittanceledger.netlify.app](https://quittanceledger.netlify.app)
+
+Custom domain `quittance.bhswebsite.org` needs a Cloudflare DNS CNAME (authoritative NS are Cloudflare, not Netlify):
+
+| Type | Name | Target | Proxy |
+|------|------|--------|-------|
+| CNAME | `quittance` | `quittanceledger.netlify.app` | Proxied |
+
 Netlify auto-deploys from `main`.
 
 ## Develop
