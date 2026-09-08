@@ -31,21 +31,20 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       setBootError(false);
       const result = await refresh();
       if (cancelled) return;
-      if (result === "error" && isProtectedRoute(pathname)) {
+      if (result === "error" && isProtectedRoute(window.location.pathname)) {
         setBootError(true);
       }
     })();
     return () => {
       cancelled = true;
     };
-    // Cold-start / reopen only — avoid flashing "Opening…" on every tab change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refresh]);
 
   useEffect(() => {
     if (!hydrated || loading || bootError) return;
 
     if (!user && isProtectedRoute(pathname)) {
+      // Soft client redirect — never bounce through server middleware loops
       router.replace("/auth/sign-in");
       return;
     }
@@ -88,6 +87,15 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             }}
           >
             Try again
+          </button>
+          <button
+            type="button"
+            className="btn-secondary mt-3 w-full"
+            onClick={() => {
+              window.location.href = "/auth/sign-in";
+            }}
+          >
+            Sign in
           </button>
         </div>
       </div>
