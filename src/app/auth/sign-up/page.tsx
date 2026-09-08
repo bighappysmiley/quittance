@@ -30,7 +30,7 @@ export default function SignUpPage() {
         return;
       }
 
-      window.location.assign("/ledger");
+      window.location.assign("/");
     } catch {
       setError("Creating your account is taking too long. Please try again.");
       setPending(false);

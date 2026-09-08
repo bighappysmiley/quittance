@@ -54,7 +54,16 @@ export default function LedgerPage() {
     );
   }, [ledger, filter, query, sort]);
 
-  if (!ledger || !stats) return null;
+  if (!ledger || !stats) {
+    return (
+      <div className="welcome-shell grid min-h-dvh place-items-center px-6 text-center">
+        <div>
+          <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
+          <p className="mt-3 text-sm text-[var(--ink-muted)]">Opening ledger…</p>
+        </div>
+      </div>
+    );
+  }
   const currency = ledger.preferences.currency;
 
   return (

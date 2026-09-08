@@ -1,5 +1,6 @@
 import type { Entry, LedgerState, Person, Preferences } from "@/lib/types";
 import { DEFAULT_PREFERENCES } from "@/lib/types";
+import { sanitizePreferences } from "@/lib/safe";
 
 /** Fictional sample contacts — not real people */
 export const DEMO_PEOPLE: Omit<Person, "id">[] = [
@@ -125,12 +126,11 @@ export function mapEntry(row: Record<string, unknown>): Entry {
 
 export function mapPreferences(row: Record<string, unknown> | undefined): Preferences {
   if (!row) return { ...DEFAULT_PREFERENCES };
-  return {
-    theme: (row.theme as Preferences["theme"]) || "dark",
-    accent: (row.accent as Preferences["accent"]) || "green",
-    currency: (row.currency as Preferences["currency"]) || "USD",
-    density: (row.density as Preferences["density"]) || "comfortable",
-    confirmActions:
-      row.confirm_actions === undefined ? true : Boolean(row.confirm_actions),
-  };
+  return sanitizePreferences({
+    theme: row.theme,
+    accent: row.accent,
+    currency: row.currency,
+    density: row.density,
+    confirm_actions: row.confirm_actions,
+  });
 }

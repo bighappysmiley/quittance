@@ -27,6 +27,7 @@ import {
   type ListDensity,
   type ThemeMode,
 } from "@/lib/types";
+import { abortTimeout } from "@/lib/safe";
 
 export default function SettingsPage() {
   const ledger = useActiveLedger();
@@ -103,7 +104,7 @@ export default function SettingsPage() {
       await fetch("/api/auth/sign-out", {
         method: "POST",
         credentials: "include",
-        signal: AbortSignal.timeout(10000),
+        signal: abortTimeout(10000),
       });
     } catch {
       // still clear local state

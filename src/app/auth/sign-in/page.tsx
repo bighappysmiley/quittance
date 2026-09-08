@@ -25,7 +25,7 @@ export default function SignInPage() {
         return;
       }
 
-      window.location.assign("/ledger");
+      window.location.assign("/");
     } catch {
       setError("Sign in is taking too long. Please try again.");
       setPending(false);

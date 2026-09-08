@@ -11,6 +11,7 @@ import type {
   ThemeMode,
 } from "@/lib/types";
 import { DEFAULT_PREFERENCES } from "@/lib/types";
+import { abortTimeout, sanitizePreferences } from "@/lib/safe";
 
 interface UserInfo {
   id: string;
@@ -61,7 +62,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       const res = await fetch("/api/ledger", {
         cache: "no-store",
         credentials: "include",
-        signal: AbortSignal.timeout(20000),
+        signal: abortTimeout(20000),
       });
       return res;
     };
@@ -80,9 +81,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }
       if (!res.ok) throw new Error("Failed to load ledger");
       const data = await res.json();
+      const ledger = data.ledger
+        ? {
+            ...data.ledger,
+            preferences: sanitizePreferences(data.ledger.preferences),
+          }
+        : null;
       set({
         user: data.user,
-        ledger: data.ledger,
+        ledger,
         hydrated: true,
         loading: false,
       });
@@ -97,7 +104,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   updatePreferences: async (partial) => {
     const ledger = get().ledger;
     if (!ledger) return;
-    const next = { ...ledger.preferences, ...partial };
+    const next = sanitizePreferences({ ...ledger.preferences, ...partial });
     set({ ledger: { ...ledger, preferences: next } });
     await fetch("/api/preferences", {
       method: "PATCH",
@@ -139,7 +146,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
     if (!res.ok) throw new Error("Demo load failed");
     const data = await res.json();
-    set((s) => ({ ledger: data.ledger, user: s.user }));
+    const ledger = data.ledger
+      ? {
+          ...data.ledger,
+          preferences: sanitizePreferences(data.ledger.preferences),
+        }
+      : null;
+    set((s) => ({ ledger, user: s.user }));
   },
 
   importLedger: async (ledgerData) => {
@@ -150,7 +163,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
     });
     if (!res.ok) throw new Error("Import failed");
     const data = await res.json();
-    set((s) => ({ ledger: data.ledger, user: s.user }));
+    const ledger = data.ledger
+      ? {
+          ...data.ledger,
+          preferences: sanitizePreferences(data.ledger.preferences),
+        }
+      : null;
+    set((s) => ({ ledger, user: s.user }));
   },
 }));
 

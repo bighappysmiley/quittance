@@ -16,6 +16,18 @@ function isProtectedRoute(pathname: string) {
   );
 }
 
+function isChunkLoadError(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  return /Loading chunk|ChunkLoadError|Failed to fetch dynamically imported module/i.test(
+    message,
+  );
+}
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const refresh = useAppStore((s) => s.refresh);
   const hydrated = useAppStore((s) => s.hydrated);
@@ -24,13 +36,18 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [bootError, setBootError] = useState(false);
+  const [bootStatus, setBootStatus] = useState<
+    "pending" | "ok" | "unauthorized" | "error"
+  >("pending");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setBootError(false);
+      setBootStatus("pending");
       const result = await refresh();
       if (cancelled) return;
+      setBootStatus(result);
       if (result === "error" && isProtectedRoute(window.location.pathname)) {
         setBootError(true);
       }
@@ -40,18 +57,41 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     };
   }, [refresh]);
 
+  // Recover from stale Home Screen / deploy chunk mismatches
   useEffect(() => {
-    if (!hydrated || loading || bootError) return;
+    const reloadOnce = () => {
+      const key = "quittance-chunk-reload";
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+      window.location.reload();
+    };
+    const onError = (event: ErrorEvent) => {
+      if (isChunkLoadError(event.error || event.message)) reloadOnce();
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      if (isChunkLoadError(event.reason)) reloadOnce();
+    };
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated || loading || bootError || bootStatus === "pending") return;
 
     if (!user && isProtectedRoute(pathname)) {
-      // Soft client redirect — never bounce through server middleware loops
-      router.replace("/auth/sign-in");
+      window.location.replace("/auth/sign-in");
       return;
     }
-    if (user && pathname === "/") {
-      router.replace("/ledger");
+    // Only hard-open ledger after a successful session load — avoids racing a
+    // soft client navigation into a broken/partial page shell.
+    if (user && bootStatus === "ok" && pathname === "/") {
+      window.location.replace("/ledger");
     }
-  }, [hydrated, loading, bootError, user, pathname, router]);
+  }, [hydrated, loading, bootError, bootStatus, user, pathname, router]);
 
   if (!hydrated) {
     return (
@@ -78,10 +118,15 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
             className="btn-primary mt-6 w-full"
             onClick={() => {
               setBootError(false);
+              setBootStatus("pending");
               void refresh().then((result) => {
+                setBootStatus(result);
                 if (result === "error") setBootError(true);
                 if (result === "unauthorized") {
-                  router.replace("/auth/sign-in");
+                  window.location.replace("/auth/sign-in");
+                }
+                if (result === "ok") {
+                  window.location.replace("/ledger");
                 }
               });
             }}

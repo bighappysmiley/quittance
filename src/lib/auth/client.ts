@@ -1,6 +1,7 @@
 "use client";
 
 import { createAuthClient } from "@neondatabase/auth/next";
+import { abortTimeout } from "@/lib/safe";
 
 export const authClient = createAuthClient();
 
@@ -11,7 +12,7 @@ export async function signInWithPassword(email: string, password: string) {
     headers: { "content-type": "application/json" },
     credentials: "include",
     body: JSON.stringify({ email, password }),
-    signal: AbortSignal.timeout(20000),
+    signal: abortTimeout(20000),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -37,7 +38,7 @@ export async function signUpWithPassword(input: {
     headers: { "content-type": "application/json" },
     credentials: "include",
     body: JSON.stringify(input),
-    signal: AbortSignal.timeout(20000),
+    signal: abortTimeout(20000),
   });
 
   const data = await res.json().catch(() => ({}));

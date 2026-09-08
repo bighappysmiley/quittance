@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ACCENTS } from "@/lib/types";
+import { resolveAccent } from "@/lib/safe";
 import { usePrefs } from "@/store/useAppStore";
 
 export function ThemeController() {
@@ -9,7 +9,7 @@ export function ThemeController() {
 
   useEffect(() => {
     const root = document.documentElement;
-    const accent = ACCENTS[prefs.accent];
+    const accent = resolveAccent(prefs.accent);
 
     const dark =
       prefs.theme === "dark" ||
@@ -17,7 +17,7 @@ export function ThemeController() {
         window.matchMedia("(prefers-color-scheme: dark)").matches);
 
     root.dataset.theme = dark ? "dark" : "light";
-    root.dataset.density = prefs.density;
+    root.dataset.density = prefs.density || "comfortable";
 
     root.style.setProperty("--accent", accent.value);
     root.style.setProperty(
@@ -33,14 +33,19 @@ export function ThemeController() {
     const onChange = () => {
       const dark = mq.matches;
       document.documentElement.dataset.theme = dark ? "dark" : "light";
-      const accent = ACCENTS[prefs.accent];
+      const accent = resolveAccent(prefs.accent);
       document.documentElement.style.setProperty(
         "--accent-soft",
         dark ? accent.softDark : accent.soft,
       );
     };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    // Older Safari used addListener on MediaQueryList
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    }
+    mq.addListener(onChange);
+    return () => mq.removeListener(onChange);
   }, [prefs.theme, prefs.accent]);
 
   return null;

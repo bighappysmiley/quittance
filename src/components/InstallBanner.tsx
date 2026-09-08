@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { Share, SquarePlus, X } from "lucide-react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -32,8 +31,12 @@ export function InstallBanner() {
 
   useEffect(() => {
     if (isStandalone()) return;
-    const dismissed = sessionStorage.getItem("quittance-install-dismissed");
-    if (dismissed === "1") return;
+    try {
+      const dismissed = sessionStorage.getItem("quittance-install-dismissed");
+      if (dismissed === "1") return;
+    } catch {
+      // private mode / blocked storage — still show the banner
+    }
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -75,7 +78,11 @@ export function InstallBanner() {
   }
 
   function dismiss() {
-    sessionStorage.setItem("quittance-install-dismissed", "1");
+    try {
+      sessionStorage.setItem("quittance-install-dismissed", "1");
+    } catch {
+      // ignore
+    }
     setVisible(false);
     setIosGuide(false);
   }
@@ -93,13 +100,12 @@ export function InstallBanner() {
             >
               <X size={14} strokeWidth={2.5} />
             </button>
-            <Image
+            <img
               src="/apple-touch-icon.png"
               alt=""
               width={44}
               height={44}
               className="install-banner-icon"
-              priority
             />
             <div className="min-w-0 flex-1">
               <p className="install-banner-title truncate text-[13px] font-semibold leading-tight tracking-[-0.01em]">
@@ -131,7 +137,7 @@ export function InstallBanner() {
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--line)]" />
             <div className="mb-4 flex items-center gap-3">
-              <Image
+              <img
                 src="/apple-touch-icon.png"
                 alt=""
                 width={56}
@@ -205,7 +211,11 @@ export function InstallBanner() {
                 }
                 onClick={() => {
                   setIosGuide(false);
-                  sessionStorage.setItem("quittance-install-dismissed", "1");
+                  try {
+                    sessionStorage.setItem("quittance-install-dismissed", "1");
+                  } catch {
+                    // ignore
+                  }
                   setVisible(false);
                 }}
               >
