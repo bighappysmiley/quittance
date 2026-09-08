@@ -29,13 +29,13 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       router.replace("/auth/sign-in");
       return;
     }
-    if (user && publicRoute) {
+    // Only bounce signed-in people off welcome — leave auth pages alone
+    // so sign-in/up can finish navigating themselves.
+    if (user && pathname === "/") {
       router.replace("/ledger");
     }
   }, [hydrated, loading, user, pathname, router]);
 
-  // Only block the first boot — never unmount the app again (that caused
-  // stuck / broken navigations after sign-in).
   if (!hydrated) {
     return (
       <div className="welcome-shell grid min-h-dvh place-items-center">

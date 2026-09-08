@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth/client";
+import { signInWithPassword } from "@/lib/auth/client";
 
 export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
@@ -13,23 +13,23 @@ export default function SignInPage() {
     setError(null);
     setPending(true);
 
-    const form = new FormData(e.currentTarget);
-    const email = String(form.get("email") || "");
-    const password = String(form.get("password") || "");
+    try {
+      const form = new FormData(e.currentTarget);
+      const email = String(form.get("email") || "");
+      const password = String(form.get("password") || "");
 
-    const { error: authError } = await authClient.signIn.email({
-      email,
-      password,
-    });
+      const { error: authError } = await signInWithPassword(email, password);
+      if (authError) {
+        setError(authError.message);
+        setPending(false);
+        return;
+      }
 
-    if (authError) {
+      window.location.assign("/ledger");
+    } catch {
+      setError("Sign in is taking too long. Please try again.");
       setPending(false);
-      setError(authError.message || "Could not sign in");
-      return;
     }
-
-    // Full reload so the session cookie is picked up cleanly.
-    window.location.href = "/ledger";
   }
 
   return (

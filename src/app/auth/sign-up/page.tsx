@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { authClient } from "@/lib/auth/client";
+import { signUpWithPassword } from "@/lib/auth/client";
 
 export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
@@ -13,24 +13,28 @@ export default function SignUpPage() {
     setError(null);
     setPending(true);
 
-    const form = new FormData(e.currentTarget);
-    const name = String(form.get("name") || "");
-    const email = String(form.get("email") || "");
-    const password = String(form.get("password") || "");
+    try {
+      const form = new FormData(e.currentTarget);
+      const name = String(form.get("name") || "");
+      const email = String(form.get("email") || "");
+      const password = String(form.get("password") || "");
 
-    const { error: authError } = await authClient.signUp.email({
-      name,
-      email,
-      password,
-    });
+      const { error: authError } = await signUpWithPassword({
+        name,
+        email,
+        password,
+      });
+      if (authError) {
+        setError(authError.message);
+        setPending(false);
+        return;
+      }
 
-    if (authError) {
+      window.location.assign("/ledger");
+    } catch {
+      setError("Creating your account is taking too long. Please try again.");
       setPending(false);
-      setError(authError.message || "Could not create account");
-      return;
     }
-
-    window.location.href = "/ledger";
   }
 
   return (
