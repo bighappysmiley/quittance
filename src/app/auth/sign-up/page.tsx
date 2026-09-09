@@ -30,7 +30,8 @@ export default function SignUpPage() {
         return;
       }
 
-      window.location.assign("/");
+      // Go straight to ledger with a full document load (no soft router hop).
+      window.location.assign("/ledger");
     } catch {
       setError("Creating your account is taking too long. Please try again.");
       setPending(false);

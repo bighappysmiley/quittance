@@ -25,7 +25,8 @@ export default function SignInPage() {
         return;
       }
 
-      window.location.assign("/");
+      // Go straight to ledger with a full document load (no soft router hop).
+      window.location.assign("/ledger");
     } catch {
       setError("Sign in is taking too long. Please try again.");
       setPending(false);

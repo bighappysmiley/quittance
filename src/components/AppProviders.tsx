@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import { ThemeController } from "@/components/ThemeController";
 
@@ -28,13 +28,23 @@ function isChunkLoadError(error: unknown) {
   );
 }
 
+function BootSplash({ message }: { message: string }) {
+  return (
+    <div className="welcome-shell fixed inset-0 z-[80] grid min-h-dvh place-items-center px-6 text-center">
+      <div>
+        <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
+        <p className="mt-3 text-sm text-[var(--ink-muted)]">{message}</p>
+      </div>
+    </div>
+  );
+}
+
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const refresh = useAppStore((s) => s.refresh);
   const hydrated = useAppStore((s) => s.hydrated);
   const loading = useAppStore((s) => s.loading);
   const user = useAppStore((s) => s.user);
   const pathname = usePathname();
-  const router = useRouter();
   const [bootError, setBootError] = useState(false);
   const [bootStatus, setBootStatus] = useState<
     "pending" | "ok" | "unauthorized" | "error"
@@ -57,12 +67,15 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     };
   }, [refresh]);
 
-  // Recover from stale Home Screen / deploy chunk mismatches
   useEffect(() => {
     const reloadOnce = () => {
-      const key = "quittance-chunk-reload";
-      if (sessionStorage.getItem(key) === "1") return;
-      sessionStorage.setItem(key, "1");
+      try {
+        const key = "quittance-chunk-reload";
+        if (sessionStorage.getItem(key) === "1") return;
+        sessionStorage.setItem(key, "1");
+      } catch {
+        // still attempt a reload once per page lifetime
+      }
       window.location.reload();
     };
     const onError = (event: ErrorEvent) => {
@@ -86,71 +99,63 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       window.location.replace("/auth/sign-in");
       return;
     }
-    // Only hard-open ledger after a successful session load — avoids racing a
-    // soft client navigation into a broken/partial page shell.
     if (user && bootStatus === "ok" && pathname === "/") {
       window.location.replace("/ledger");
     }
-  }, [hydrated, loading, bootError, bootStatus, user, pathname, router]);
+  }, [hydrated, loading, bootError, bootStatus, user, pathname]);
 
-  if (!hydrated) {
-    return (
-      <div className="welcome-shell grid min-h-dvh place-items-center px-6 text-center">
-        <div>
-          <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
-          <p className="mt-3 text-sm text-[var(--ink-muted)]">Opening…</p>
-        </div>
-      </div>
-    );
-  }
+  const showBootError =
+    bootError && isProtectedRoute(pathname) && !user && hydrated;
+  const showOpening = !hydrated;
 
-  if (bootError && isProtectedRoute(pathname) && !user) {
-    return (
-      <div className="welcome-shell grid min-h-dvh place-items-center px-6 text-center">
-        <div className="max-w-sm">
-          <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
-          <p className="mt-4 text-[15px] text-[var(--ink-muted)]">
-            Couldn’t open your ledger just now. Check your connection and try
-            again.
-          </p>
-          <button
-            type="button"
-            className="btn-primary mt-6 w-full"
-            onClick={() => {
-              setBootError(false);
-              setBootStatus("pending");
-              void refresh().then((result) => {
-                setBootStatus(result);
-                if (result === "error") setBootError(true);
-                if (result === "unauthorized") {
-                  window.location.replace("/auth/sign-in");
-                }
-                if (result === "ok") {
-                  window.location.replace("/ledger");
-                }
-              });
-            }}
-          >
-            Try again
-          </button>
-          <button
-            type="button"
-            className="btn-secondary mt-3 w-full"
-            onClick={() => {
-              window.location.href = "/auth/sign-in";
-            }}
-          >
-            Sign in
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // CRITICAL: always keep `{children}` mounted. Returning early unmounts Next's
+  // layout router and remounts it after refresh — that race crashes to the
+  // stock "This page couldn’t load" screen on iPhone after sign-in / reopen.
   return (
     <>
       <ThemeController />
       {children}
+      {showOpening ? <BootSplash message="Opening…" /> : null}
+      {showBootError ? (
+        <div className="welcome-shell fixed inset-0 z-[80] grid min-h-dvh place-items-center px-6 text-center">
+          <div className="max-w-sm">
+            <p className="brand-mark text-3xl text-[var(--ink)]">Quittance</p>
+            <p className="mt-4 text-[15px] text-[var(--ink-muted)]">
+              Couldn’t open your ledger just now. Check your connection and try
+              again.
+            </p>
+            <button
+              type="button"
+              className="btn-primary mt-6 w-full"
+              onClick={() => {
+                setBootError(false);
+                setBootStatus("pending");
+                void refresh().then((result) => {
+                  setBootStatus(result);
+                  if (result === "error") setBootError(true);
+                  if (result === "unauthorized") {
+                    window.location.replace("/auth/sign-in");
+                  }
+                  if (result === "ok") {
+                    window.location.replace("/ledger");
+                  }
+                });
+              }}
+            >
+              Try again
+            </button>
+            <button
+              type="button"
+              className="btn-secondary mt-3 w-full"
+              onClick={() => {
+                window.location.href = "/auth/sign-in";
+              }}
+            >
+              Sign in
+            </button>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
